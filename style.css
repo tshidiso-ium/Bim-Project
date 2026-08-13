@@ -258,6 +258,78 @@ input:focus, textarea:focus, select:focus {
   outline: none;
 }
 
+/* Items finder */
+
+.items-finder-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.items-finder-help {
+  color: var(--bim-ui_bg-contrast-60);
+  line-height: 1.45;
+}
+
+.items-finder-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.items-finder-actions bim-button {
+  width: 100%;
+}
+
+.items-finder-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bim-ui_bg-contrast-20);
+  border-radius: 0.5rem;
+  background: var(--bim-ui_bg-contrast-10);
+}
+
+.items-finder-summary bim-label[data-tone="success"] {
+  color: #66d19e;
+}
+
+.items-finder-summary bim-label[data-tone="error"] {
+  color: #ff7b7b;
+}
+
+.items-finder-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.items-finder-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--bim-ui_bg-contrast-80);
+}
+
+.items-finder-result span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.items-finder-result strong {
+  min-width: 1.75rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 999px;
+  background: var(--primary-100);
+  color: var(--primary-400);
+  text-align: center;
+}
+
 .todo-item {
   padding: 20px;
   background-color: var(--background-200);

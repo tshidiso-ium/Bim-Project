@@ -25,7 +25,7 @@ export function ProjectDetailsPage(props: Props) {
     navigateTo("/")
   }
 
-  const viewerGrid = React.useRef<BUI.Grid<["Main"]>>(null)
+  const viewerGrid = React.useRef<BUI.Grid<any, any>>(null)
   let engineManager: OBC.Components | null = null
 
   const setupGrid = async () => {

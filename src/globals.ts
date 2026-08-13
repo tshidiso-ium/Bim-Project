@@ -18,4 +18,5 @@ export const appIcons = {
   REFRESH: "radix-icons:update",
   FOCUS: "ri:focus-mode",
   CONTEXT: "ix:context-menu",
+  SEARCH: "material-symbols:search-rounded",
 }
