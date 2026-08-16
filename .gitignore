@@ -1,1 +1,12 @@
-assets/Gear
+# Dependencies
+node_modules/
+
+# Large Gear assets
+assets/Gear/
+
+# Build/cache files
+dist/
+.vite/
+
+# macOS
+.DS_Store
