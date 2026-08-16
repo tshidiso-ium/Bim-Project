@@ -19,4 +19,6 @@ export const appIcons = {
   FOCUS: "ri:focus-mode",
   CONTEXT: "ix:context-menu",
   SEARCH: "material-symbols:search-rounded",
+  COPY: "material-symbols:content-copy-outline-rounded",
+  LIST: "material-symbols:format-list-bulleted-rounded",
 }

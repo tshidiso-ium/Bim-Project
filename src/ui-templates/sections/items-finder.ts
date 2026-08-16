@@ -8,6 +8,23 @@ export interface ItemsFinderPanelState {
   components: OBC.Components;
 }
 
+export interface FinderPropertyInput {
+  propertySet: string;
+  property: string;
+  value: string;
+  valueType: "text" | "number" | "boolean";
+}
+
+const finderPropertyConsumers = new WeakMap<
+  OBC.Components,
+  (property: FinderPropertyInput) => void
+>();
+
+export const usePropertyInItemsFinder = (
+  components: OBC.Components,
+  property: FinderPropertyInput,
+) => finderPropertyConsumers.get(components)?.(property);
+
 type PropertyValue = RegExp | number | boolean;
 
 const exactText = (value: string) => {
@@ -38,6 +55,15 @@ export const itemsFinderPanelTemplate: BUI.StatefullComponent<
     statusLabel.textContent = message;
     statusLabel.dataset.tone = tone;
   };
+
+  finderPropertyConsumers.set(components, (finderProperty) => {
+    if (!propertySetInput || !propertyInput || !valueInput || !valueTypeInput) return;
+    propertySetInput.value = finderProperty.propertySet;
+    propertyInput.value = finderProperty.property;
+    valueInput.value = finderProperty.value;
+    valueTypeInput.value = [finderProperty.valueType];
+    setStatus(`Ready to find ${finderProperty.property} = ${finderProperty.value}.`);
+  });
 
   const showResults = (items: OBC.ModelIdMap) => {
     if (!resultsContainer) return;
@@ -171,6 +197,7 @@ export const itemsFinderPanelTemplate: BUI.StatefullComponent<
       <div class="items-finder-form">
         <bim-label class="items-finder-help">
           Find every item whose property has an exact value in a specific property set.
+          You can also select <strong>Use in Finder</strong> from the Model Items panel.
         </bim-label>
 
         <bim-text-input

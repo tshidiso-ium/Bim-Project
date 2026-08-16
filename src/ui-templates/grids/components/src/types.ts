@@ -1,5 +1,5 @@
 import * as BUI from "@thatopen/ui";
-import { DataSourcesPanelState, ItemsDataPanelState, ItemsFinderPanelState, ModelsPanelState, QueriesPanelState, SmartViewsPanelState } from "../../../sections";
+import { DataSourcesPanelState, ItemsDataPanelState, ItemsFinderPanelState, ModelItemsPanelState, ModelsPanelState, QueriesPanelState, SmartViewsPanelState } from "../../../sections";
 
 type Viewport = {
   name: "viewport";
@@ -36,7 +36,12 @@ export type ItemsFinder = {
   state: ItemsFinderPanelState
 }
 
-type ComponentsGridElements = [Viewport, ItemsData, Models, Queries, DataSources, SmartViews, ItemsFinder];
+export type ModelItems = {
+  name: "modelItems";
+  state: ModelItemsPanelState
+}
+
+type ComponentsGridElements = [Viewport, ItemsData, Models, Queries, DataSources, SmartViews, ItemsFinder, ModelItems];
 
 type ComponentsGridLayouts = ["Models", "Items Finder", "SmartViews", "Viewer"];
 

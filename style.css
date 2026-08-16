@@ -330,6 +330,82 @@ input:focus, textarea:focus, select:focus {
   text-align: center;
 }
 
+.model-items-panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.model-items-search {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.model-properties-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bim-ui_bg-contrast-20);
+}
+
+.model-properties-list {
+  display: flex;
+  max-height: 45%;
+  min-height: 8rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: auto;
+}
+
+.model-properties-empty {
+  padding: 0.75rem;
+  color: var(--bim-ui_bg-contrast-60);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.model-property-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--bim-ui_bg-contrast-20);
+  border-radius: 0.35rem;
+}
+
+.model-property-details {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.model-property-set,
+.model-property-value {
+  overflow: hidden;
+  color: var(--bim-ui_bg-contrast-60);
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-property-details strong {
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-property-row bim-button {
+  flex: 0;
+}
+
 .todo-item {
   padding: 20px;
   background-color: var(--background-200);
