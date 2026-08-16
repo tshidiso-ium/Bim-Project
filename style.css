@@ -406,6 +406,28 @@ input:focus, textarea:focus, select:focus {
   flex: 0;
 }
 
+/* Query serialization */
+
+.queries-toolbar {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) auto auto;
+  gap: 0.5rem;
+}
+
+.queries-transfer-status {
+  min-height: 1rem;
+  color: var(--bim-ui_bg-contrast-60);
+  font-size: 0.7rem;
+}
+
+.queries-transfer-status[data-tone="success"] {
+  color: #66d19e;
+}
+
+.queries-transfer-status[data-tone="error"] {
+  color: #ff7b7b;
+}
+
 .todo-item {
   padding: 20px;
   background-color: var(--background-200);
