@@ -8,6 +8,7 @@ export const dataSourcesListTemplate: BUI.StatefullComponent<DataSourcesListStat
   const onCreated = (e?: Element) => {
     if (!e) return;
     const table = e as BUI.Table;
+    table.dataset.source = source ?? "";
     table.loadFunction = async () => {
       const data: typeof table.data = [];
       if (!source) return data

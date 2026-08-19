@@ -2,12 +2,12 @@ import * as Firestore from "firebase/firestore";
 import { initializeApp } from "firebase/app"
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA6xdn6lZjLFQEPJTEhKAJDhBo7Cuduw18",
-  authDomain: "bim-dev-master-66e29.firebaseapp.com",
-  projectId: "bim-dev-master-66e29",
-  storageBucket: "bim-dev-master-66e29.firebasestorage.app",
-  messagingSenderId: "545288092693",
-  appId: "1:545288092693:web:c6b8f7bdcc57e59e1ca21c"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
@@ -25,4 +25,10 @@ export async function deleteDocument(path: string, id: string) {
 export async function updateDocument<T extends Record<string, any>>(path: string, id: string, data: T) {
   const doc = Firestore.doc(firestoreDB, `${path}/${id}`)
   await Firestore.updateDoc(doc, data)
+}
+
+export async function getDocument<T extends Record<string, any>>(path: string, id: string) {
+  const reference = Firestore.doc(firestoreDB, `${path}/${id}`)
+  const snapshot = await Firestore.getDoc(reference)
+  return snapshot.exists() ? snapshot.data() as T : undefined
 }

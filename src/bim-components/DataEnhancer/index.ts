@@ -59,4 +59,64 @@ export class DataEnhancer extends OBC.Component {
 
     return result
   }
+
+  /**
+   * Finds every loaded model item that matches one or more records from a
+   * configured external data source.
+   *
+   * The source matcher is reused in reverse: instead of matching one item
+   * against the complete source, each model item is matched only against the
+   * supplied source records. This keeps the matching rules in one place and
+   * works with any DataEnhancer source.
+   */
+  async getItemsBySourceData(
+    source: string,
+    sourceData: any | any[],
+    config?: {
+      modelIds?: RegExp[];
+      batchSize?: number;
+    },
+  ): Promise<OBC.ModelIdMap> {
+    const sourceConfig = this.sources.get(source)
+    if (!sourceConfig) {
+      throw new Error(`DataEnhancer: Source "${source}" not found`)
+    }
+
+    const records = Array.isArray(sourceData) ? sourceData : [sourceData]
+    if (records.length === 0) return {}
+
+    const batchSize = config?.batchSize ?? 1000
+    if (!Number.isInteger(batchSize) || batchSize < 1) {
+      throw new Error("DataEnhancer: batchSize must be a positive integer")
+    }
+
+    const fragments = this.components.get(OBC.FragmentsManager)
+    const result: OBC.ModelIdMap = {}
+
+    for (const [modelId, model] of fragments.list) {
+      if (config?.modelIds && !config.modelIds.some(pattern => pattern.test(modelId))) {
+        continue
+      }
+
+      const localIds = await model.getLocalIds()
+      for (let start = 0; start < localIds.length; start += batchSize) {
+        const batchIds = localIds.slice(start, start + batchSize)
+        const batchData = await model.getItemsData(batchIds)
+
+        for (const [index, attributes] of batchData.entries()) {
+          const matches = sourceConfig.matcher(attributes, records)
+          if (!matches || matches.length === 0) continue
+
+          let modelResult = result[modelId]
+          if (!modelResult) {
+            modelResult = new Set<number>()
+            result[modelId] = modelResult
+          }
+          modelResult.add(batchIds[index])
+        }
+      }
+    }
+
+    return result
+  }
 }

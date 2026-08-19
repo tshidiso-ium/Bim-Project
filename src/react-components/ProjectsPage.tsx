@@ -12,7 +12,33 @@ interface Props {
   projectsManager: ProjectsManager
 }
 
-const projectsCollection = getCollection<IProject>("projects")
+interface FirestoreProject {
+  name: string
+  description: string
+  status: ProjectStatus
+  userRole: UserRole
+  finishDate: string | Firestore.Timestamp
+  cost: number
+  todos: unknown[]
+  createdAt?: Firestore.Timestamp
+  updatedAt?: Firestore.Timestamp
+}
+
+const projectsCollection = getCollection<FirestoreProject>("projects")
+
+const parseFirestoreDate = (
+  value: string | Firestore.Timestamp,
+  fieldName: string,
+) => {
+  if (value instanceof Firestore.Timestamp) return value.toDate()
+
+  if (typeof value === "string") {
+    const date = new Date(`${value}T00:00:00`)
+    if (!Number.isNaN(date.getTime())) return date
+  }
+
+  throw new Error(`Project field "${fieldName}" is not a valid date`)
+}
 
 export function ProjectsPage(props: Props) {
 
@@ -22,15 +48,22 @@ export function ProjectsPage(props: Props) {
   const getFirestoreProjects = async () => {
     const firebaseProjects = await Firestore.getDocs(projectsCollection)
     for (const doc of firebaseProjects.docs) {
-      const data = doc.data()
-      const project: IProject = {
-        ...data,
-        finishDate: (data.finishDate as unknown as Firestore.Timestamp).toDate()
-      }
       try {
+        const data = doc.data()
+        const project: IProject = {
+          name: data.name,
+          description: data.description,
+          status: data.status,
+          userRole: data.userRole,
+          finishDate: parseFirestoreDate(data.finishDate, "finishDate"),
+          cost: typeof data.cost === "number" ? data.cost : 0,
+          todos: Array.isArray(data.todos) ? data.todos : [],
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        }
         props.projectsManager.newProject(project, doc.id)
       } catch (error) {
-        
+        console.error(`Could not load project ${doc.id}`, error)
       }
     }
   }
@@ -57,21 +90,44 @@ export function ProjectsPage(props: Props) {
     modal.showModal()
   }
 
-  const onFormSubmit = (e: React.FormEvent) => {
+  const onFormSubmit = async (e: React.FormEvent) => {
     const projectForm = document.getElementById("new-project-form")
     if (!(projectForm && projectForm instanceof HTMLFormElement)) {return}
     e.preventDefault()
     const formData = new FormData(projectForm)
+    const finishDate = formData.get("finishDate") as string
+    const cost = Number(formData.get("cost") || 0)
+    if (!Number.isInteger(cost) || cost < 0) {
+      alert("Cost must be a positive whole number")
+      return
+    }
+
+    const timestamp = Firestore.Timestamp.now()
     const projectData: IProject = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
       status: formData.get("status") as ProjectStatus,
       userRole: formData.get("userRole") as UserRole,
-      finishDate: new Date(formData.get("finishDate") as string)
+      finishDate: parseFirestoreDate(finishDate, "finishDate"),
+      cost,
+      todos: [],
+      createdAt: timestamp.toDate(),
+      updatedAt: timestamp.toDate(),
+    }
+    const firestoreProject: FirestoreProject = {
+      name: projectData.name,
+      description: projectData.description,
+      status: projectData.status,
+      userRole: projectData.userRole,
+      finishDate,
+      cost,
+      todos: [],
+      createdAt: timestamp,
+      updatedAt: timestamp,
     }
     try {
-      Firestore.addDoc(projectsCollection, projectData)
-      const project = props.projectsManager.newProject(projectData)
+      const projectDocument = await Firestore.addDoc(projectsCollection, firestoreProject)
+      props.projectsManager.newProject(projectData, projectDocument.id)
       projectForm.reset()
       const modal = document.getElementById("new-project-modal")
       if (!(modal && modal instanceof HTMLDialogElement)) {return}
@@ -136,9 +192,9 @@ export function ProjectsPage(props: Props) {
                 <span className="material-icons-round">person</span>Role
               </label>
               <select name="userRole">
-                <option>Architect</option>
-                <option>Engineer</option>
-                <option>Developer</option>
+                <option value="architect">Architect</option>
+                <option value="engineer">Engineer</option>
+                <option value="developer">Developer</option>
               </select>
             </div>
             <div className="form-field-container">
@@ -147,17 +203,24 @@ export function ProjectsPage(props: Props) {
                 Status
               </label>
               <select name="status">
-                <option>Pending</option>
-                <option>Active</option>
-                <option>Finished</option>
+                <option value="pending">Pending</option>
+                <option value="active">Active</option>
+                <option value="finished">Finished</option>
               </select>
+            </div>
+            <div className="form-field-container">
+              <label htmlFor="cost">
+                <span className="material-icons-round">payments</span>
+                Cost
+              </label>
+              <input name="cost" type="number" min="0" step="1" defaultValue="0" required />
             </div>
             <div className="form-field-container">
               <label htmlFor="finishDate">
                 <span className="material-icons-round">calendar_month</span>
                 Finish Date
               </label>
-              <input name="finishDate" type="date" />
+              <input name="finishDate" type="date" required />
             </div>
             <div
               style={{

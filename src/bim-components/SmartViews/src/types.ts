@@ -21,3 +21,24 @@ export interface SmartView {
   // If visibility is true, all items will be visible unless those in exceptions
   visibilityExceptions: ViewExceptions;
 }
+
+export type SerializedModelIdMap = Record<string, number[]>;
+
+export interface SerializedViewColors {
+  queries?: Record<string, string[]>;
+  items?: Record<string, SerializedModelIdMap>;
+}
+
+export interface SerializedViewExceptions {
+  queries?: string[];
+  items?: SerializedModelIdMap;
+}
+
+/** JSON-safe definition used to recreate a SmartView. */
+export interface SerializedSmartView extends Record<string, unknown> {
+  id: string;
+  name: string;
+  colors: SerializedViewColors;
+  defaultVisibility: boolean;
+  visibilityExceptions: SerializedViewExceptions;
+}

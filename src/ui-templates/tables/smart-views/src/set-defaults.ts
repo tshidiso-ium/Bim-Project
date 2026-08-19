@@ -23,12 +23,33 @@ export const setDefaults = (
       const view = smartViews.list.get(guid)
       if (!view) return cellValue
 
-      const onClick = async ({target: button}: {target: BUI.Button}) => {
+      const onApply = async ({target: button}: {target: BUI.Button}) => {
         button.loading = true
-        await smartViews.apply(view)
-        button.loading = false
+        try {
+          await smartViews.apply(view)
+        } finally {
+          button.loading = false
+        }
       }
-      return BUI.html`<bim-button @click=${onClick} style="flex: 0;" icon=${appIcons.APPLY}></bim-button>`
+
+      const onUpdate = () => {
+        smartViews.updateFromCurrentState(guid)
+      }
+
+      return BUI.html`
+        <bim-button
+          @click=${onApply}
+          style="flex: 0;"
+          icon=${appIcons.APPLY}
+          title="Apply Smart View"
+        ></bim-button>
+        <bim-button
+          @click=${onUpdate}
+          style="flex: 0;"
+          icon=${appIcons.REFRESH}
+          title="Update Smart View from current state"
+        ></bim-button>
+      `
     }
   }
 }

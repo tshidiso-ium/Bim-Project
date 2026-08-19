@@ -1,7 +1,7 @@
 import * as BUI from "@thatopen/ui";
 import * as OBC from "@thatopen/components";
 import * as OBF from "@thatopen/components-front";
-import { appIcons } from "../../globals";
+import { appColorPalette, appIcons } from "../../globals";
 import * as THREE from "three"
 import * as FRAGS from "@thatopen/fragments"
 
@@ -21,6 +21,8 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<
   const { components, world } = state;
 
   let colorInput: BUI.ColorInput | undefined;
+  let selectionColorLabel: BUI.Label | undefined;
+  let selectionPalette: HTMLDivElement | undefined;
 
   const onInputCreated = (e?: Element) => {
     if (!e) return;
@@ -53,6 +55,38 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<
     
     button.loading = false
     BUI.ContextMenu.removeMenus()
+  };
+
+  const setActiveSelectionSwatch = (color: string) => {
+    if (!selectionPalette) return;
+    const swatches = selectionPalette.querySelectorAll<HTMLButtonElement>(
+      ".selection-color-swatch",
+    );
+    for (const swatch of swatches) {
+      swatch.toggleAttribute(
+        "data-selected",
+        swatch.dataset.color?.toLowerCase() === color.toLowerCase(),
+      );
+    }
+  };
+
+  const onSelectionColorChange = async (name: string, color: string) => {
+    const highlighter = components.get(OBF.Highlighter);
+    const material: Omit<FRAGS.MaterialDefinition, "customId"> = {
+      color: new THREE.Color(color),
+      renderedFaces: FRAGS.RenderedFaces.ONE,
+      opacity: 1,
+      transparent: false,
+    };
+
+    highlighter.config.selectMaterialDefinition = material;
+    highlighter.styles.set(highlighter.config.selectName, material);
+    await highlighter.updateColors();
+
+    setActiveSelectionSwatch(color);
+    if (selectionColorLabel) {
+      selectionColorLabel.textContent = `${name} · ${color}`;
+    }
   };
 
   const onReset = async ({ target }: { target: BUI.Button }) => {
@@ -172,6 +206,36 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<
         <bim-button icon=${appIcons.FOCUS} label="Focus" @click=${onFocus}></bim-button>
         <bim-button icon=${appIcons.HIDE} label="Hide" @click=${onHide}></bim-button> 
         <bim-button icon=${appIcons.ISOLATE} label="Isolate" @click=${onIsolate}></bim-button>
+        <bim-button icon=${appIcons.PALETTE} label="Selection Color">
+          <bim-context-menu>
+            <div class="selection-palette-menu">
+              <bim-label>Select a highlight color</bim-label>
+              <div
+                class="selection-color-palette"
+                ${BUI.ref((element) => {
+                  selectionPalette = element as HTMLDivElement;
+                })}
+              >
+                ${appColorPalette.map(({ name, value }) => BUI.html`
+                  <button
+                    type="button"
+                    class="selection-color-swatch"
+                    style=${`--selection-swatch: ${value}`}
+                    data-color=${value}
+                    ?data-selected=${value === appColorPalette[0].value}
+                    title=${name}
+                    aria-label=${`Use ${name} as the selection color`}
+                    @click=${() => onSelectionColorChange(name, value)}
+                  ></button>
+                `)}
+              </div>
+              <bim-label
+                class="selection-color-label"
+                ${BUI.ref((element) => (selectionColorLabel = element as BUI.Label))}
+              >Lime · #BCF124</bim-label>
+            </div>
+          </bim-context-menu>
+        </bim-button>
         <bim-button icon=${appIcons.COLORIZE} label="Colorize">
           <bim-context-menu>
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">

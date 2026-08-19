@@ -428,6 +428,66 @@ input:focus, textarea:focus, select:focus {
   color: #ff7b7b;
 }
 
+/* Selection color palette */
+
+.selection-palette-menu {
+  display: flex;
+  width: 11rem;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.selection-color-palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+button.selection-color-swatch {
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 0;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 0.45rem;
+  outline: 1px solid var(--bim-ui_bg-contrast-40);
+  background: var(--selection-swatch);
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+button.selection-color-swatch:hover {
+  border-color: white;
+  background: var(--selection-swatch);
+  transform: scale(1.08);
+}
+
+button.selection-color-swatch[data-selected] {
+  border-color: white;
+  box-shadow: 0 0 0 2px var(--bim-ui_main-base);
+}
+
+button.selection-color-swatch[data-selected]::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: white;
+  content: "✓";
+  font-size: 1rem;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.selection-color-label {
+  color: var(--bim-ui_bg-contrast-60);
+  font-size: 0.7rem;
+}
+
+.query-color-menu {
+  width: 11rem;
+}
+
 .todo-item {
   padding: 20px;
   background-color: var(--background-200);

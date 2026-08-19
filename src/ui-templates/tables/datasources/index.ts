@@ -5,5 +5,7 @@ import { setDefaults } from "./src/set-defaults";
 
 export const dataSourcesList = (state: DataSourcesListState) => {
   const component = BUI.Component.create<BUI.Table, DataSourcesListState>(dataSourcesListTemplate, state);
+  const [table] = component;
+  setDefaults(state, table);
   return component
 };

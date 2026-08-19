@@ -3,7 +3,7 @@ import * as OBF from "@thatopen/components-front";
 import * as BUI from "@thatopen/ui";
 import * as THREE from "three"
 import { QueriesListState, QueriesListTableData } from "./types";
-import { appIcons } from "../../../../globals";
+import { appColorPalette, appIcons } from "../../../../globals";
 import { SmartViews } from "../../../../bim-components/SmartViews";
 
 export const setDefaults = (
@@ -38,16 +38,10 @@ export const setDefaults = (
         colorInput = e as BUI.ColorInput;
       };
 
-      const onApplyColor = async ({ target: button }: { target: BUI.Button }) => {
-        if (!colorInput) return
-        button.loading = true
+      const applyQueryColor = async (color: string) => {
         const items = await query.test()
-        if (OBC.ModelIdMapUtils.isEmpty(items)) {
-          button.loading = false
-          return
-        }
+        if (OBC.ModelIdMapUtils.isEmpty(items)) return
 
-        const { color } = colorInput
         const highlighter = components.get(OBF.Highlighter)
         if (!highlighter.styles.has(color)) {
           highlighter.styles.set(color, {
@@ -61,8 +55,30 @@ export const setDefaults = (
         await highlighter.highlightByID(color, items)
         const smartViews = components.get(SmartViews)
         smartViews.addQueryColor(color, Name)
-        button.loading = false
         BUI.ContextMenu.removeMenus()
+      }
+
+      const onApplyColor = async ({ target: button }: { target: BUI.Button }) => {
+        if (!colorInput) return
+        button.loading = true
+        try {
+          await applyQueryColor(colorInput.color)
+        } finally {
+          button.loading = false
+        }
+      }
+
+      const onApplyPresetColor = async (
+        event: Event,
+        color: string,
+      ) => {
+        const button = event.currentTarget as HTMLButtonElement
+        button.disabled = true
+        try {
+          await applyQueryColor(color)
+        } finally {
+          button.disabled = false
+        }
       }
 
       return BUI.html`
@@ -71,7 +87,21 @@ export const setDefaults = (
           <bim-context-menu>
             <bim-button style="flex: 0;" icon=${appIcons.COLORIZE} label="Colorize">
               <bim-context-menu>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div class="selection-palette-menu query-color-menu">
+                  <bim-label>Quick colors</bim-label>
+                  <div class="selection-color-palette">
+                    ${appColorPalette.map(({ name, value }) => BUI.html`
+                      <button
+                        type="button"
+                        class="selection-color-swatch"
+                        style=${`--selection-swatch: ${value}`}
+                        title=${name}
+                        aria-label=${`Colorize ${Name} with ${name}`}
+                        @click=${(event: Event) => onApplyPresetColor(event, value)}
+                      ></button>
+                    `)}
+                  </div>
+                  <bim-label>Custom color</bim-label>
                   <bim-color-input ${BUI.ref(onColorInputCreated)}></bim-color-input>
                   <bim-button @click=${onApplyColor} icon=${appIcons.APPLY} label="Apply"></bim-button>
                 </div>

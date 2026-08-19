@@ -21,4 +21,16 @@ export const appIcons = {
   SEARCH: "material-symbols:search-rounded",
   COPY: "material-symbols:content-copy-outline-rounded",
   LIST: "material-symbols:format-list-bulleted-rounded",
+  PALETTE: "material-symbols:palette-outline-rounded",
 }
+
+export const appColorPalette = [
+  { name: "Lime", value: "#BCF124" },
+  { name: "Blue", value: "#3B82F6" },
+  { name: "Cyan", value: "#06B6D4" },
+  { name: "Green", value: "#22C55E" },
+  { name: "Orange", value: "#F59E0B" },
+  { name: "Red", value: "#EF4444" },
+  { name: "Purple", value: "#8B5CF6" },
+  { name: "Pink", value: "#EC4899" },
+] as const;
