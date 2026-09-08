@@ -521,6 +521,10 @@ bim-grid {
   padding: 1rem;
 }
 
+.viewport-grid {
+  container-type: inline-size;
+}
+
 bim-panel-section {
   --bim-panel-section_hc: var(--primary);
   overflow: auto;
@@ -562,8 +566,197 @@ bim-context-menu {
   height: 100%;
 }
 
-bim-grid[floating] > bim-toolbar {
-  border: none;
+.viewer-toolbar-switcher {
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.viewer-toolbar-expanded {
+  display: none;
+  width: fit-content;
+  border-radius: var(--bim-ui_size-2xs);
+  background-color: var(--bim-ui_bg-base);
+  outline: 1px solid var(--bim-ui_bg-contrast-40);
+  pointer-events: auto;
+}
+
+.viewer-toolbar-expanded-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.viewer-toolbar-expanded-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.viewer-toolbar-expanded-divider {
+  width: 1px;
+  background-color: var(--bim-ui_bg-contrast-40);
+}
+
+.viewer-toolbar-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--bim-ui_bg-contrast-60);
+  font-size: var(--bim-ui_size-xs);
+}
+
+.viewer-toolbar-section-label .viewer-toolbar-icon {
+  --bim-icon--c: var(--bim-ui_bg-contrast-60);
+  --bim-icon--fz: 0.9rem;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.viewer-toolbar-compact {
+  box-sizing: border-box;
+  display: flex;
+  width: fit-content;
+  max-width: calc(100% - 0.75rem);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  border-radius: var(--bim-ui_size-2xs);
+  background-color: var(--bim-ui_bg-base);
   justify-self: center;
   outline: 1px solid var(--bim-ui_bg-contrast-40);
+  pointer-events: auto;
+}
+
+.viewer-toolbar-group {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.viewer-toolbar-action-shell {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+}
+
+button.viewer-toolbar-action {
+  display: inline-flex;
+  box-sizing: border-box;
+  min-width: var(--bim-ui_size-5xl, 2.5rem);
+  height: var(--bim-ui_size-5xl, 2.5rem);
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: var(--bim-ui_size-4xs, 0.25rem);
+  background: transparent;
+  color: #e8edf2;
+  font: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+button.viewer-toolbar-action:hover {
+  background-color: var(--primary);
+  color: var(--bim-ui_bg-base);
+}
+
+button.viewer-toolbar-action:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button.viewer-toolbar-action:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+button.viewer-toolbar-action--compact {
+  width: var(--bim-ui_size-5xl, 2.5rem);
+  padding: 0.45rem;
+}
+
+.viewer-toolbar-icon {
+  --bim-icon--c: #e8edf2;
+  --bim-icon--fz: 1.05rem;
+  display: block;
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  pointer-events: none;
+}
+
+.viewer-toolbar-menu-chevron {
+  display: block;
+  flex: 0 0 auto;
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.viewer-colorize-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.viewer-context-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+button.viewer-context-action {
+  flex: 1;
+  padding: 0.45rem 0.75rem;
+  border: 0;
+  border-radius: var(--bim-ui_size-4xs, 0.25rem);
+  background-color: var(--bim-ui_bg-contrast-20);
+  color: var(--bim-ui_bg-contrast-100);
+  font: inherit;
+  cursor: pointer;
+}
+
+button.viewer-context-action:hover {
+  background-color: var(--primary);
+  color: var(--bim-ui_bg-base);
+}
+
+button.viewer-context-action:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.viewer-toolbar-divider {
+  align-self: stretch;
+  width: 1px;
+  min-height: var(--bim-ui_size-5xl);
+  background-color: var(--bim-ui_bg-contrast-40);
+}
+
+@container (max-width: 22rem) {
+  .viewer-toolbar-divider {
+    display: none;
+  }
+}
+
+@container (min-width: 64rem) {
+  .viewer-toolbar-expanded {
+    display: flex;
+  }
+
+  .viewer-toolbar-compact {
+    display: none;
+  }
 }

@@ -20,22 +20,32 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<
 > = (state) => {
   const { components, world } = state;
 
-  let colorInput: BUI.ColorInput | undefined;
-  let selectionColorLabel: BUI.Label | undefined;
-  let selectionPalette: HTMLDivElement | undefined;
+  const getButton = (event: Event) => event.currentTarget as HTMLButtonElement;
 
-  const onInputCreated = (e?: Element) => {
-    if (!e) return;
-    colorInput = e as BUI.ColorInput;
+  const setButtonLoading = (button: HTMLButtonElement, loading: boolean) => {
+    button.disabled = loading;
+    button.classList.toggle("is-loading", loading);
   };
 
-  const onApplyColor = async ({ target: button }: { target: BUI.Button }) => {
+  const openContextMenu = (event: Event) => {
+    const button = getButton(event);
+    const menu = button.parentElement?.querySelector<BUI.ContextMenu>(
+      ":scope > bim-context-menu",
+    );
+    if (menu) menu.visible = true;
+  };
+
+  const onApplyColor = async (event: Event) => {
+    const button = getButton(event);
+    const colorInput = button
+      .closest("bim-context-menu")
+      ?.querySelector<BUI.ColorInput>("bim-color-input");
     if (!colorInput) return;
     const { color } = colorInput;
     const highlighter = components.get(OBF.Highlighter)
     const selection = highlighter.selection.select; // this is a ModelIdMap, the engine data type to represent item selections
     if (OBC.ModelIdMapUtils.isEmpty(selection)) return;
-    button.loading = true
+    setButtonLoading(button, true)
     if (!highlighter.styles.has(color)) {
       highlighter.styles.set(color, {
         color: new THREE.Color(color),
@@ -53,13 +63,12 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<
     ),
       highlighter.clear("select")])
     
-    button.loading = false
+    setButtonLoading(button, false)
     BUI.ContextMenu.removeMenus()
   };
 
   const setActiveSelectionSwatch = (color: string) => {
-    if (!selectionPalette) return;
-    const swatches = selectionPalette.querySelectorAll<HTMLButtonElement>(
+    const swatches = document.querySelectorAll<HTMLButtonElement>(
       ".selection-color-swatch",
     );
     for (const swatch of swatches) {
@@ -84,45 +93,52 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<
     await highlighter.updateColors();
 
     setActiveSelectionSwatch(color);
-    if (selectionColorLabel) {
-      selectionColorLabel.textContent = `${name} · ${color}`;
+    const labels = document.querySelectorAll<BUI.Label>(
+      ".selection-color-label",
+    );
+    for (const label of labels) {
+      label.textContent = `${name} · ${color}`;
     }
   };
 
-  const onReset = async ({ target }: { target: BUI.Button }) => {
-    target.loading = true;
+  const onReset = async (event: Event) => {
+    const target = getButton(event);
+    setButtonLoading(target, true);
     const highlighter = components.get(OBF.Highlighter)
     await highlighter.clear()
     BUI.ContextMenu.removeMenus()
-    target.loading = false;
+    setButtonLoading(target, false);
   };
   
-  const onHide = async ({ target }: { target: BUI.Button }) => {
+  const onHide = async (event: Event) => {
+    const target = getButton(event);
     const highlighter = components.get(OBF.Highlighter);
     const selection = highlighter.selection.select;
     if (OBC.ModelIdMapUtils.isEmpty(selection)) return;
-    target.loading = true;
+    setButtonLoading(target, true);
     const hider = components.get(OBC.Hider);
     const promises = [hider.set(false, selection), highlighter.clear("select")];
     await Promise.all(promises);
-    target.loading = false;
+    setButtonLoading(target, false);
   }
 
-  const onIsolate = async ({ target }: { target: BUI.Button }) => {
+  const onIsolate = async (event: Event) => {
+    const target = getButton(event);
     const highlighter = components.get(OBF.Highlighter);
     const selection = highlighter.selection.select;
     if (OBC.ModelIdMapUtils.isEmpty(selection)) return;
-    target.loading = true;
+    setButtonLoading(target, true);
     const hider = components.get(OBC.Hider);
     await hider.isolate(selection);
-    target.loading = false;
+    setButtonLoading(target, false);
   };
 
-  const onShowAll = async ({ target }: { target: BUI.Button }) => {
-    target.loading = true;
+  const onShowAll = async (event: Event) => {
+    const target = getButton(event);
+    setButtonLoading(target, true);
     const hider = components.get(OBC.Hider);
     await hider.set(true);
-    target.loading = false;
+    setButtonLoading(target, false);
   };
 
   const setModelTransparency = (opacity: number) => {
@@ -185,69 +201,183 @@ export const viewerToolbarTemplate: BUI.StatefullComponent<
     }
   }
 
-  const onFocus = async ({ target }: { target: BUI.Button }) => {
+  const onFocus = async (event: Event) => {
+    const target = getButton(event);
     if (!(world.camera instanceof OBC.SimpleCamera)) return;
     const highlighter = components.get(OBF.Highlighter)
     const selection = highlighter.selection.select;
-    target.loading = true;
+    setButtonLoading(target, true);
     await world.camera.fitToItems(
       OBC.ModelIdMapUtils.isEmpty(selection) ? undefined : selection,
     );
-    target.loading = false;
+    setButtonLoading(target, false);
   };
 
+  type ToolbarIconName =
+    | "show"
+    | "ghost"
+    | "focus"
+    | "hide"
+    | "isolate"
+    | "palette"
+    | "colorize";
+
+  const toolbarIcons: Record<ToolbarIconName, string> = {
+    show: appIcons.SHOW,
+    ghost: appIcons.TRANSPARENT,
+    focus: appIcons.FOCUS,
+    hide: appIcons.HIDE,
+    isolate: appIcons.ISOLATE,
+    palette: appIcons.PALETTE,
+    colorize: appIcons.COLORIZE,
+  };
+
+  const toolbarIconTemplate = (name: ToolbarIconName) => {
+    return BUI.html`
+      <bim-icon
+        class="viewer-toolbar-icon"
+        icon=${toolbarIcons[name]}
+        aria-hidden="true"
+      ></bim-icon>
+    `;
+  };
+
+  const selectionColorMenuTemplate = () => BUI.html`
+    <bim-context-menu>
+      <div class="selection-palette-menu">
+        <bim-label>Select a highlight color</bim-label>
+        <div class="selection-color-palette">
+          ${appColorPalette.map(({ name, value }) => BUI.html`
+            <button
+              type="button"
+              class="selection-color-swatch"
+              style=${`--selection-swatch: ${value}`}
+              data-color=${value}
+              ?data-selected=${value === appColorPalette[0].value}
+              title=${name}
+              aria-label=${`Use ${name} as the selection color`}
+              @click=${() => onSelectionColorChange(name, value)}
+            ></button>
+          `)}
+        </div>
+        <bim-label class="selection-color-label">Lime · #BCF124</bim-label>
+      </div>
+    </bim-context-menu>
+  `;
+
+  const colorizeMenuTemplate = () => BUI.html`
+    <bim-context-menu>
+      <div class="viewer-colorize-menu">
+        <bim-color-input></bim-color-input>
+        <div class="viewer-context-actions">
+          <button type="button" class="viewer-context-action" @click=${onApplyColor}>
+            Apply
+          </button>
+          <button type="button" class="viewer-context-action" @click=${onReset}>
+            Reset
+          </button>
+        </div>
+      </div>
+    </bim-context-menu>
+  `;
+
+  const menuChevronTemplate = () => BUI.html`
+    <svg
+      class="viewer-toolbar-menu-chevron"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      aria-hidden="true"
+    >
+      <path d="m4 6 4 4 4-4"></path>
+    </svg>
+  `;
+
+  const toolbarActionTemplate = (
+    compact: boolean,
+    icon: ToolbarIconName,
+    label: string,
+    onClick: (event: Event) => void | Promise<void>,
+    menu?: BUI.TemplateResult,
+  ) => BUI.html`
+    <div class="viewer-toolbar-action-shell">
+      <button
+        type="button"
+        class=${`viewer-toolbar-action${compact ? " viewer-toolbar-action--compact" : ""}`}
+        title=${label}
+        aria-label=${label}
+        aria-haspopup=${menu ? "menu" : "false"}
+        @click=${menu ? openContextMenu : onClick}
+      >
+        ${toolbarIconTemplate(icon)}
+        ${compact
+          ? null
+          : BUI.html`<span class="viewer-toolbar-action-label">${label}</span>`}
+        ${menu && !compact ? menuChevronTemplate() : null}
+      </button>
+      ${menu ?? null}
+    </div>
+  `;
+
+  const visibilityToolsTemplate = (compact: boolean) => BUI.html`
+    ${toolbarActionTemplate(compact, "show", "Show All", onShowAll)}
+    ${toolbarActionTemplate(compact, "ghost", "Toggle Ghost", onToggleGhost)}
+  `;
+
+  const selectionToolsTemplate = (compact: boolean) => BUI.html`
+    ${toolbarActionTemplate(compact, "focus", "Focus", onFocus)}
+    ${toolbarActionTemplate(compact, "hide", "Hide", onHide)}
+    ${toolbarActionTemplate(compact, "isolate", "Isolate", onIsolate)}
+    ${toolbarActionTemplate(
+      compact,
+      "palette",
+      "Selection Color",
+      openContextMenu,
+      selectionColorMenuTemplate(),
+    )}
+    ${toolbarActionTemplate(
+      compact,
+      "colorize",
+      "Colorize",
+      openContextMenu,
+      colorizeMenuTemplate(),
+    )}
+  `;
+
   return BUI.html`
-    <bim-toolbar>
-      <bim-toolbar-section label="Visibility" icon=${appIcons.SHOW}>
-        <bim-button icon=${appIcons.SHOW} label="Show All" @click=${onShowAll}></bim-button> 
-        <bim-button icon=${appIcons.TRANSPARENT} label="Toggle Ghost" @click=${onToggleGhost}></bim-button>
-      </bim-toolbar-section>
-      <bim-toolbar-section label="Selection" icon=${appIcons.SELECT}>
-        <bim-button icon=${appIcons.FOCUS} label="Focus" @click=${onFocus}></bim-button>
-        <bim-button icon=${appIcons.HIDE} label="Hide" @click=${onHide}></bim-button> 
-        <bim-button icon=${appIcons.ISOLATE} label="Isolate" @click=${onIsolate}></bim-button>
-        <bim-button icon=${appIcons.PALETTE} label="Selection Color">
-          <bim-context-menu>
-            <div class="selection-palette-menu">
-              <bim-label>Select a highlight color</bim-label>
-              <div
-                class="selection-color-palette"
-                ${BUI.ref((element) => {
-                  selectionPalette = element as HTMLDivElement;
-                })}
-              >
-                ${appColorPalette.map(({ name, value }) => BUI.html`
-                  <button
-                    type="button"
-                    class="selection-color-swatch"
-                    style=${`--selection-swatch: ${value}`}
-                    data-color=${value}
-                    ?data-selected=${value === appColorPalette[0].value}
-                    title=${name}
-                    aria-label=${`Use ${name} as the selection color`}
-                    @click=${() => onSelectionColorChange(name, value)}
-                  ></button>
-                `)}
-              </div>
-              <bim-label
-                class="selection-color-label"
-                ${BUI.ref((element) => (selectionColorLabel = element as BUI.Label))}
-              >Lime · #BCF124</bim-label>
-            </div>
-          </bim-context-menu>
-        </bim-button>
-        <bim-button icon=${appIcons.COLORIZE} label="Colorize">
-          <bim-context-menu>
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-              <bim-color-input ${BUI.ref(onInputCreated)}></bim-color-input> <!-- custom color input from That Open Engine -->
-              <div style="display: flex; gap: 0.5rem">
-                <bim-button @click=${onApplyColor} icon=${appIcons.APPLY} label="Apply"></bim-button>
-                <bim-button icon=${appIcons.CLEAR} label="Reset" @click=${onReset}></bim-buttom>
-              </div>
-            </div>
-          </bim-context-menu>
-        </bim-button>
-      </bim-toolbar-section>
-    </bim-toolbar>
+    <div class="viewer-toolbar-switcher">
+      <div class="viewer-toolbar-expanded" role="toolbar" aria-label="Viewer tools">
+        <div class="viewer-toolbar-expanded-section" role="group" aria-label="Visibility tools">
+          <div class="viewer-toolbar-expanded-actions">
+            ${visibilityToolsTemplate(false)}
+          </div>
+          <div class="viewer-toolbar-section-label" aria-hidden="true">
+            ${toolbarIconTemplate("show")}
+            <span>Visibility</span>
+          </div>
+        </div>
+        <div class="viewer-toolbar-expanded-divider" aria-hidden="true"></div>
+        <div class="viewer-toolbar-expanded-section" role="group" aria-label="Selection tools">
+          <div class="viewer-toolbar-expanded-actions">
+            ${selectionToolsTemplate(false)}
+          </div>
+          <div class="viewer-toolbar-section-label" aria-hidden="true">
+            ${toolbarIconTemplate("focus")}
+            <span>Selection</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="viewer-toolbar-compact" role="toolbar" aria-label="Viewer tools">
+        <div class="viewer-toolbar-group" role="group" aria-label="Visibility tools">
+          ${visibilityToolsTemplate(true)}
+        </div>
+        <div class="viewer-toolbar-divider" aria-hidden="true"></div>
+        <div class="viewer-toolbar-group" role="group" aria-label="Selection tools">
+          ${selectionToolsTemplate(true)}
+        </div>
+      </div>
+    </div>
   `;
 };

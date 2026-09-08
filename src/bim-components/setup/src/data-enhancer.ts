@@ -4,16 +4,13 @@ import { DataEnhancer } from "../../DataEnhancer"
 import { ItemData } from "@thatopen/fragments"
 import { getCollection } from "../../../firebase"
 import { getDocs } from "firebase/firestore"
+import technicalDocumentation from "../../../../resources/technical_documentation.json"
 
 export const setupDataEnhancer = (components: OBC.Components) => {
   const enhancer = components.get(DataEnhancer)
 
   enhancer.sources.set("Technical Documentation", {
-    data: async () => {
-      const file = await fetch("/resources/technical_documentation.json")
-      const json = await file.json()
-      return json
-    },
+    data: async () => technicalDocumentation,
     matcher: (attrs: ItemData, data: any[]) => {
       const categoryData = attrs._category
       if (!(categoryData && "value" in categoryData)) return null
